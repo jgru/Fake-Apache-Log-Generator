@@ -74,13 +74,20 @@ parser.add_argument(
     default=0.0,
     type=float,
 )
-
+parser.add_argument(
+    "--resources",
+    "-r",
+    dest="resource_file",
+    help="File containing the endpoints to 'access'",
+    type=str,
+)
 args = parser.parse_args()
 
 log_lines = args.num_lines
 file_prefix = args.file_prefix
 output_type = args.output_type
 log_format = args.log_format
+resource_file = args.resource_file
 
 faker = Faker()
 
@@ -109,16 +116,20 @@ response = ["200", "404", "500", "301"]
 
 verb = ["GET", "POST", "DELETE", "PUT"]
 
-resources = [
-    "/list",
-    "/wp-content",
-    "/wp-admin",
-    "/explore",
-    "/search/tag/list",
-    "/app/main/posts",
-    "/posts/posts/explore",
-    "/apps/cart.jsp?appID=",
-]
+if resource_file:
+    with open(resource_file, "r") as rf:
+        resources = rf.readlines().strip()
+else:
+    resources = [
+        "/list",
+        "/wp-content",
+        "/wp-admin",
+        "/explore",
+        "/search/tag/list",
+        "/app/main/posts",
+        "/posts/posts/explore",
+        "/apps/cart.jsp?appID=",
+    ]
 
 ualist = [
     faker.firefox,
