@@ -18,28 +18,6 @@ local = get_localzone()
 # allow writing different patterns (Common Log, Apache Error log etc)
 # log rotation
 
-
-class switch(object):
-    def __init__(self, value):
-        self.value = value
-        self.fall = False
-
-    def __iter__(self):
-        """Return the match method once, then stop"""
-        yield self.match
-        raise StopIteration
-
-    def match(self, *args):
-        """Indicate whether or not to enter a case suite"""
-        if self.fall or not args:
-            return True
-        elif self.value in args:  # changed for v1.5, see below
-            self.fall = True
-            return True
-        else:
-            return False
-
-
 parser = argparse.ArgumentParser(__file__, description="Fake Apache Log Generator")
 parser.add_argument(
     "--output",
@@ -100,17 +78,14 @@ outFileName = (
     else file_prefix + "_access_log_" + timestr + ".log"
 )
 
-for case in switch(output_type):
-    if case("LOG"):
-        f = open(outFileName, "w")
-        break
-    if case("GZ"):
-        f = gzip.open(outFileName + ".gz", "w")
-        break
-    if case("CONSOLE"):
-        pass
-    if case():
-        f = sys.stdout
+if output_type == "LOG":
+    f = open(outFileName, "w")
+elif output_type == "GZ":
+    f = gzip.open(outFileName + ".gz", "w")
+elif output_type == "CONSOLE":
+    f = sys.stdout
+else:
+    f = sys.stdout
 
 response = ["200", "404", "500", "301"]
 
@@ -118,7 +93,7 @@ verb = ["GET", "POST", "DELETE", "PUT"]
 
 if resource_file:
     with open(resource_file, "r") as rf:
-        resources = rf.readlines().strip()
+        resources = rf.read().splitlines()
 else:
     resources = [
         "/list",
@@ -144,7 +119,7 @@ while flag:
     if args.sleep:
         increment = datetime.timedelta(seconds=args.sleep)
     else:
-        increment = datetime.timedelta(seconds=random.randint(30, 300))
+        increment = datetime.timedelta(seconds=random.randint(30, 500))
     otime += increment
 
     ip = faker.ipv4()
